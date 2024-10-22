@@ -981,7 +981,9 @@ html {
     border-radius: 5px; /* Match button border radius */
     color: var(--c-text-action); /* Match button text color */
     transition: 0.15s ease; /* Match button transition */
-    margin-left: 50px;}
+    margin-left: 50px;
+	padding-bottom: 5px;
+}
 
 .welcome-message:hover {
     background-color: var(--c-background-quaternary); /* Match button hover effect */
