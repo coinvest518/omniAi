@@ -260,6 +260,8 @@ const AppUsers: React.FC = () => {
       setSelectedPrompt((prevPrompt) => ({
         ...prevPrompt,
         isPurchased: true,
+        showCopyButton: true,
+
       }) as Prompt);
 
        // Update userPrompts with the purchased status
