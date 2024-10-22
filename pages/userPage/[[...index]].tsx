@@ -228,7 +228,7 @@ const AppUsers: React.FC = () => {
       const updatedUserData = await response.json();
       setUserData(updatedUserData);
       setUser(updatedUserData);
-      alert('You have received 10 free credits!');
+      alert('You have received 100 free credits!');
     } catch (error) {
       console.error('Error assigning free credits:', error);
       alert(`Failed to assign free credits: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
