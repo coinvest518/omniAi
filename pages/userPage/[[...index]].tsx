@@ -269,10 +269,8 @@ const AppUsers: React.FC = () => {
         )
       );
 
-    console.log("Purchase successful - Setting showCopyButton to true");
-    setShowCopyButton(true); 
-    console.log("showCopyButton state:", showCopyButton); // Check if it's actually true
-    setIsModalOpen(false); 
+      console.log("Purchase successful - Setting showCopyButton to true");
+      setShowCopyButton(true);
 
       // Refresh user data
       await fetchUserData();
