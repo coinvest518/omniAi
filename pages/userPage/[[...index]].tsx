@@ -270,10 +270,6 @@ const AppUsers: React.FC = () => {
         )
       );
 
-      console.log('showCopyButton:', showCopyButton);
-      console.log("Purchase successful - Setting showCopyButton to true");
-      setShowCopyButton(true);
-
       // Refresh user data
       await fetchUserData();
       
