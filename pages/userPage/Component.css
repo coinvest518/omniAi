@@ -971,3 +971,19 @@ html {
 		border-radius: 99em;
 	}
 }
+
+.welcome-message {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    padding: 8px 16px; /* Match button padding */
+    background-color: var(--c-background-tertiary); /* Match button background */
+    border-radius: 8px; /* Match button border radius */
+    color: var(--c-text-action); /* Match button text color */
+    transition: 0.15s ease; /* Match button transition */
+}
+
+.welcome-message:hover {
+    background-color: var(--c-background-quaternary); /* Match button hover effect */
+    color: var(--c-accent-primary); /* Match button hover text color */
+}

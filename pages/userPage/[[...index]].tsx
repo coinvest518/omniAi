@@ -410,7 +410,9 @@ useEffect(() => {
               <h2>Youn Plan and Usage</h2>
             </div>
             {user && (
-              <p>Welcome, {user.firstName || user.username}</p>
+              <div className="welcome-message">
+                <p>Welcome, {user.firstName || user.username}</p>
+              </div>
             )}
             <div className="content-header-actions">
             <button className="button" onClick={() => setShowFilters(!showFilters)}> 
