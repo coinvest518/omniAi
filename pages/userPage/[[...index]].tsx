@@ -311,11 +311,7 @@ useEffect(() => {
           </div>
           <div className="header-navigation">
             <nav className="header-navigation-as">
-            {user && (
-              <div className="welcome-message">
-                <p>Welcome, {user.firstName || user.username}</p>
-              </div>
-            )}
+            
               <Link href="/" style={{ textDecoration: 'none' }}> Home </Link>
               <Link href="/chat" style={{ textDecoration: 'none' }}> Launch App </Link>
 
