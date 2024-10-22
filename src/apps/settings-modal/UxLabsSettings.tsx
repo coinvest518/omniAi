@@ -61,7 +61,7 @@ export function UxLabsSettings() {
 
     {/*
       Other Graduated (removed or backlog):
-        - <Link href='https://github.com/enricoros/big-AGI/issues/359' target='_blank'>Draw App</Link>
+        - <Link href='https://github.com/coinvest518' target='_blank'>Draw App</Link>
         - Text Tools: dinamically shown where applicable (e.g. Diff)
         - Chat Mode: follow-ups; moved to Chat Advanced UI
     */}
@@ -69,11 +69,11 @@ export function UxLabsSettings() {
     <FormControl orientation='horizontal' sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
       <FormLabelStart title='Graduated' description='Ex-labs' />
       <Typography level='body-xs'>
-        <Link href='https://big-agi.com/blog/beam-multi-model-ai-reasoning' target='_blank'>Beam</Link>
-        {' · '}<Link href='https://github.com/enricoros/big-AGI/issues/208' target='_blank'>Split Chats</Link>
-        {' · '}<Link href='https://github.com/enricoros/big-AGI/issues/354' target='_blank'>Call AGI</Link>
-        {' · '}<Link href='https://github.com/enricoros/big-AGI/issues/282' target='_blank'>Persona Creator</Link>
-        {' · '}<Link href='https://github.com/enricoros/big-agi/issues/192' target='_blank'>Auto Diagrams</Link>
+        <Link href='https://omni-ai.com/' target='_blank'>Beam</Link>
+        {' · '}<Link href='https://github.com/coinvest518/omni-aI/' target='_blank'>Split Chats</Link>
+        {' · '}<Link href='https://github.com/coinvest518/omni-aI/' target='_blank'>Call AGI</Link>
+        {' · '}<Link href='https://github.com/coinvest518/omni-aI/' target='_blank'>Persona Creator</Link>
+        {' · '}<Link href='https://github.com/coinvest518/omni-ai/' target='_blank'>Auto Diagrams</Link>
         {' · '}Imagine · Chat Search · Text Tools · LLM Overheat
       </Typography>
     </FormControl>

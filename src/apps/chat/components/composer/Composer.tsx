@@ -198,8 +198,8 @@ export function Composer(props: {
   const creditCosts = {
     'generate-text': 10,
     'generate-text-beam': 50,
-    'generate-image': 30,
-    'append-user': 35,
+    'generate-image': 20,
+    'append-user': 20,
     'textImagine': 25,
     'generate-react': 25,
     'callFeature': 15,

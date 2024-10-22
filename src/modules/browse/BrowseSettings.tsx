@@ -38,7 +38,7 @@ export function BrowseSettings() {
 
     <Typography level='body-sm'>
       Configure Browsing to enable loading links and web pages. <ExternalLink
-      href='https://github.com/enricoros/big-agi/blob/main/docs/config-feature-browse.md'>
+      href='https://github.com/coinvest518'>
       Learn more</ExternalLink>.
     </Typography>
 

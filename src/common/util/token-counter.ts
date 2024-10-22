@@ -93,8 +93,7 @@ export function countModelTokens(text: string, llmId: DLLMId, debugFrom: string)
     }
   }
 
-  // Note: the try/catch shouldn't be necessary, but there could be corner cases where the tiktoken library throws
-  // https://github.com/enricoros/big-agi/issues/182
+
   let count = 0;
   try {
     count = tokenEncoders[openaiModel]?.encode(text, 'all', [])?.length || 0;

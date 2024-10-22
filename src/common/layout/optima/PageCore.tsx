@@ -11,7 +11,6 @@ import { PageBar } from './PageBar';
 
 
 const pageCoreSx: SxProps = {
-  // background: 'url(/images/big-agi-background-3.png) no-repeat center bottom fixed',
   backgroundColor: themeBgApp,
   height: '100dvh',
   display: 'flex', flexDirection: 'column',

@@ -26,7 +26,7 @@ export async function openAndLoadConversations(preventClash: boolean = false): P
   try {
     blobs = await fileOpen({
       description: `${Brand.Title.Base} JSON Conversations`,
-      mimeTypes: ['application/json', 'application/big-agi'],
+      mimeTypes: ['application/json', 'application/omni-ai'],
       multiple: true,
     });
   } catch (error) {
@@ -158,7 +158,7 @@ export async function downloadAllConversationsJson() {
   // save file
   await fileSave(blob, {
     fileName: `conversations_${window?.location?.hostname || 'all'}_${payload.conversations.length}_${prettyTimestampForFilenames(false)}.agi.json`,
-    // mimeTypes: ['application/json', 'application/big-agi'],
+    // mimeTypes: ['application/json', 'application/omni-ai'],
     extensions: ['.json'],
   });
 }

@@ -1,6 +1,4 @@
-// Copyright (c) 2023-2024 Enrico Ros
-// This subsystem is responsible for fetching the transcript of a YouTube video.
-// It is used by the Big-AGI Persona Creator to create a character sheet.
+
 
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
