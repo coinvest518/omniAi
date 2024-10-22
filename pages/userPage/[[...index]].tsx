@@ -145,17 +145,10 @@ const AppUsers: React.FC = () => {
 
   const handleCardClick = (prompt: Prompt, _userId: string) => {
     console.log('Selected Prompt:', prompt);
-<<<<<<< HEAD
-  setSelectedPrompt(() => ({
-  ...prompt,
-  isPurchased: userData?.purchasedPromptIds?.includes(prompt.id) || false,
-  showCopyButton: userData?.purchasedPromptIds?.includes(prompt.id) || false, // Only show if purchased
-=======
     setSelectedPrompt(() => ({
   ...prompt,
   isPurchased: userData?.purchasedPromptIds?.includes(prompt.id) || false,
   showCopyButton: userData?.purchasedPromptIds?.includes(prompt.id) || false, 
->>>>>>> 5642cbdaf4415e00322f843ea737eac610e64a6c
 }));
     setIsModalOpen(true);
   };
@@ -268,10 +261,6 @@ const AppUsers: React.FC = () => {
         ...prevPrompt,
         isPurchased: true,
         showCopyButton: true,
-<<<<<<< HEAD
-=======
-
->>>>>>> 5642cbdaf4415e00322f843ea737eac610e64a6c
       }) as Prompt);
 
        // Update userPrompts with the purchased status
