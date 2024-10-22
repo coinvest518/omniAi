@@ -408,7 +408,7 @@ useEffect(() => {
           </div>
           <div className="content-header">
             <div className="content-header-intro">
-              <h2>Youn Plan and Usage</h2>
+              <h2>Your Plan and Usage</h2>
             </div>
           
             <div className="content-header-actions">
