@@ -717,6 +717,15 @@ img {
 		}
 	}
 }
+.content-header-actions .button { 
+	display: none; 
+  }
+  
+  @media (max-width: 800px) { /* Adjust breakpoint as needed */
+	.content-header-actions .button {
+	  display: block; /* Show the button on mobile */
+	}
+}
 
 .content {
 	border-top: 1px solid var(--c-border-primary);
@@ -774,6 +783,43 @@ a[href="https://coinvestinc.medium.com/"] {
 		}
 	}
 }
+
+.vertical-tabs-mobile { 
+	div {
+		display: flex;
+		align-items: center;
+		padding: 0.4em 1em;
+		background-color: transparent;
+		border-radius: 8px;
+		text-decoration: none;
+		font-weight: 500;
+		color: var(--c-text-action);
+		transition: 0.15s ease;
+		cursor: pointer;
+
+
+		&:hover,
+		&:focus,
+		&.active {
+			background-color: var(--c-background-tertiary);
+			color: var(--c-accent-primary);
+		}
+
+		&+* {
+			margin-top: 0.2rem;
+		}
+	}
+  }
+  
+  @media (max-width: 768px) { /* Adjust breakpoint as needed */
+	.vertical-tabs-mobile {
+	  display: block; /* Show on mobile */
+	}
+  
+	.content .vertical-tabs { 
+	  display: none; /* Hide the original vertical tabs on mobile */
+	}
+  }
 
 .content-main {
 	padding-top: 2rem;
