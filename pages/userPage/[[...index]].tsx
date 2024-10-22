@@ -145,10 +145,17 @@ const AppUsers: React.FC = () => {
 
   const handleCardClick = (prompt: Prompt, _userId: string) => {
     console.log('Selected Prompt:', prompt);
+<<<<<<< HEAD
   setSelectedPrompt(() => ({
   ...prompt,
   isPurchased: userData?.purchasedPromptIds?.includes(prompt.id) || false,
   showCopyButton: userData?.purchasedPromptIds?.includes(prompt.id) || false, // Only show if purchased
+=======
+    setSelectedPrompt(() => ({
+  ...prompt,
+  isPurchased: userData?.purchasedPromptIds?.includes(prompt.id) || false,
+  showCopyButton: userData?.purchasedPromptIds?.includes(prompt.id) || false, 
+>>>>>>> 5642cbdaf4415e00322f843ea737eac610e64a6c
 }));
     setIsModalOpen(true);
   };
@@ -228,7 +235,7 @@ const AppUsers: React.FC = () => {
       const updatedUserData = await response.json();
       setUserData(updatedUserData);
       setUser(updatedUserData);
-      alert('You have received 10 free credits!');
+      alert('You have received 100 free credits!');
     } catch (error) {
       console.error('Error assigning free credits:', error);
       alert(`Failed to assign free credits: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
@@ -261,6 +268,10 @@ const AppUsers: React.FC = () => {
         ...prevPrompt,
         isPurchased: true,
         showCopyButton: true,
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5642cbdaf4415e00322f843ea737eac610e64a6c
       }) as Prompt);
 
        // Update userPrompts with the purchased status
