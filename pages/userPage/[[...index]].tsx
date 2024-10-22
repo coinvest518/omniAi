@@ -13,6 +13,8 @@ import Link from 'next/link';
 import SignInModal from './SignInModal';
 import styles from './AppUsers.module.css';
 
+
+
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
 
@@ -52,6 +54,7 @@ const AppUsers: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [userPrompts, setUserPrompts] = useState<Prompt[]>([]);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false); // State for filter dropdown
 
   const fetchUserPrompts = useCallback(async (userId: string) => {
     if (!userId) return []; // Early return if no userId
@@ -367,6 +370,7 @@ useEffect(() => {
           </div>
         </div>
       </header>
+      
       <main className="main">
         <div className="responsive-wrapper">
           <div className="main-header">
@@ -411,18 +415,28 @@ useEffect(() => {
               <p>Welcome, {user.firstName || user.username}</p>
             )}
             <div className="content-header-actions">
-              <Link href="#" className="button">
-                <i className="ph-faders-bold"></i>
+            <button className="button" onClick={() => setShowFilters(!showFilters)}> 
+            <i className="ph-faders-bold"></i>
                 <span>Filters</span>
-              </Link>
-              <div className="button">
-                <i className="ph-plus-bold"></i>
-                <Link style={{ textDecoration: 'none' }} href="https://gleam.io/1Pm9S/omni-credits-giveaway" rel="nofollow">
-                  <p>Omni 1000 Credits Giveaway</p>
-                </Link>
-                <script type="text/javascript" src="https://widget.gleamjs.io/e.js" async></script>
+              </button>
+
+          {showFilters && ( 
+            <div className="vertical-tabs-mobile"> 
+              <div className={activeTab === 'all' ? 'active' : ''} onClick={() => { handleTabChange('all'); setShowFilters(false); }}>All Prompts</div>
+              <div className={activeTab === 'developer' ? 'active' : ''} onClick={() => { handleTabChange('developer'); setShowFilters(false); }}>Developer Prompts</div>
+              <div className={activeTab === 'youtube' ? 'active' : ''} onClick={() => { handleTabChange('youtube'); setShowFilters(false); }}>YouTube Prompts</div>
+              <div className={activeTab === 'business' ? 'active' : ''} onClick={() => { handleTabChange('business'); setShowFilters(false); }}>Business Prompts</div>
+              <div className={activeTab === 'social' ? 'active' : ''} onClick={() => { handleTabChange('social'); setShowFilters(false); }}>Social Media Prompts</div>
+              <div className={activeTab === 'art' ? 'active' : ''} onClick={() => { handleTabChange('art'); setShowFilters(false); }}>YouTube Prompts</div>
+              <div className={activeTab === 'UserPrompts' ? 'active' : ''} onClick={() => { handleTabChange('UserPrompts'); setShowFilters(false); }}>User Prompts</div>
+              <div><Link href="https://coinvestinc.medium.com/" style={{ textDecoration: 'none' }}>Blog</Link></div>
+              <div className={activeTab === 'dao' ? 'active' : ''} onClick={() => { handleTabChange('dao'); setShowFilters(false); }}
+                >
+                  OMNI NFT (Coming Soon)
               </div>
             </div>
+          )}
+          </div>
           </div>
           <div className="content-header-cards-container">
             <div className="content-header-cards bg-blue-500 p-4 rounded-lg shadow-lg">
@@ -561,5 +575,6 @@ useEffect(() => {
 
 
 export default AppUsers;
+
 
 
