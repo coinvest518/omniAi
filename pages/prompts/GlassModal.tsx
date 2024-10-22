@@ -40,7 +40,12 @@ const Modal: React.FC<ModalProps> = ({
     setLocalPromptData(promptData);
   }, [promptData]);
 
+
   const handleCopyClick = () => {
+    if (!isPurchased) {
+      alert('You need to purchase the prompt first!');
+      return; // Prevent further execution if not purchased
+    }
     if (localPromptData) {
       copyToClipboard(localPromptData, 'Prompt Data Copied to Clipboard!');
       setIsCopied(true);
@@ -53,6 +58,7 @@ const Modal: React.FC<ModalProps> = ({
       setTimeout(() => setIsCopied(false), 2000);
     }
   }, [isCopied]);
+
   const handlePurchase = () => {
     onPurchase(userId, promptId); // Use Clerk's user ID directly
   };
