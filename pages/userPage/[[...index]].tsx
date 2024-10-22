@@ -270,6 +270,7 @@ const AppUsers: React.FC = () => {
         )
       );
 
+      console.log('showCopyButton:', showCopyButton);
       console.log("Purchase successful - Setting showCopyButton to true");
       setShowCopyButton(true);
 
@@ -292,10 +293,11 @@ useEffect(() => {
   console.log("selectedPrompt changed:", selectedPrompt);
   console.log("isPurchased:", selectedPrompt?.isPurchased);
   if (selectedPrompt?.isPurchased) {
-    console.log("Setting showCopyButton to true inside useEffect");
     setShowCopyButton(true);
+  } else {
+    setShowCopyButton(false);
   }
-}, [selectedPrompt]); 
+}, [selectedPrompt, selectedPrompt?.isPurchased]);
 
 
   return (
