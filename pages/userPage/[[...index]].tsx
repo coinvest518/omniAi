@@ -311,6 +311,11 @@ useEffect(() => {
           </div>
           <div className="header-navigation">
             <nav className="header-navigation-as">
+            {user && (
+              <div className="welcome-message">
+                <p>Welcome, {user.firstName || user.username}</p>
+              </div>
+            )}
               <Link href="/" style={{ textDecoration: 'none' }}> Home </Link>
               <Link href="/chat" style={{ textDecoration: 'none' }}> Launch App </Link>
 
@@ -409,11 +414,7 @@ useEffect(() => {
             <div className="content-header-intro">
               <h2>Youn Plan and Usage</h2>
             </div>
-            {user && (
-              <div className="welcome-message">
-                <p>Welcome, {user.firstName || user.username}</p>
-              </div>
-            )}
+          
             <div className="content-header-actions">
             <button className="button" onClick={() => setShowFilters(!showFilters)}> 
             <i className="ph-faders-bold"></i>
