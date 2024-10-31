@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import type { SxProps } from '@mui/joy/styles/types';
-import { Box, Button, Card, IconButton, Input, Typography } from '@mui/joy';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 
@@ -9,6 +8,7 @@ import { useYouTubeTranscript, YTVideoTranscript } from '~/modules/youtube/useYo
 
 import { GoodTooltip } from '~/common/components/GoodTooltip';
 import { InlineError } from '~/common/components/InlineError';
+import { Alert, Box, Button, Card, IconButton, Input, Typography } from '@mui/joy'; 
 
 import type { SimplePersonaProvenance } from '../store-app-personas';
 
@@ -49,7 +49,7 @@ function YouTubeVideoTranscriptCard(props: { transcript: YTVideoTranscript, onCl
           {transcript?.title}
         </Typography>
         <Typography level='body-xs' sx={{ mt: 0.75 }}>
-          {transcript?.transcript.slice(0, 280)}...
+        {transcript?.transcript ? transcript.transcript.slice(0, 280) + '...' : 'Loading transcript...'}
         </Typography>
         {/*</Box>*/}
 
@@ -155,8 +155,10 @@ export function FromYouTube(props: {
     </form>
 
     {isError && (
-      <InlineError error={error} sx={{ mt: 3 }} />
-    )}
+  <Alert color="danger" sx={{ mt: 3 }}> 
+  Failed to fetch YouTube transcript: {error instanceof Error ? error.message : 'Unknown error'}
+</Alert>
+)}
 
     {!!transcript && !!videoID && (
       <YouTubeVideoTranscriptCard transcript={transcript} onClose={() => setVideoID(null)} sx={{ mt: 3 }} />
