@@ -1,19 +1,20 @@
 import * as React from 'react';
 
 export interface YTVideoTranscript {
+  videoUrl: string; // Add videoUrl to the interface
   title: string;
   transcript: string;
   thumbnailUrl: string;
 }
 
-export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
+export function useYouTubeTranscript(videoUrl: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
   const [isFetching, setIsFetching] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
   const [error, setError] = React.useState<unknown | null>(null);
 
   React.useEffect(() => {
-    if (!videoID) {
+    if (!videoUrl) {
       return;
     }
 
@@ -23,11 +24,12 @@ export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (t
       setError(null);
 
       try {
-        // Make a request to your API route
-        const response = await fetch(`/api/youtubeTranscript?videoId=${videoID}`); 
+        // Send the full videoUrl to the API
+        const response = await fetch(`/api/youtubeTranscript?videoUrl=${encodeURIComponent(videoUrl)}`); 
         const data = await response.json();
 
         const newTranscript = {
+          videoUrl: data.videoUrl, // Store the videoUrl
           title: data.videoTitle,
           transcript: data.transcript,
           thumbnailUrl: data.thumbnailUrl,
@@ -43,7 +45,7 @@ export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (t
     };
 
     fetchData();
-  }, [videoID, onNewTranscript]);
+  }, [videoUrl, onNewTranscript]); // Include videoUrl in the dependency array
 
   return {
     transcript,

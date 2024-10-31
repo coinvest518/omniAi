@@ -6,16 +6,16 @@ import { analyzeTranscript } from './analyzeTranscript'; // Import the analysis 
 type CaptionEvent = { segs?: { utf8: string }[] };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { videoId } = req.query;
+  const { videoUrl } = req.query; // Expecting videoUrl instead of videoId
 
-  const videoIdString = Array.isArray(videoId) ? videoId[0] : videoId;
+  const videoUrlString = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
 
-  if (!videoIdString) {
-    return res.status(400).json({ error: 'Video ID is required' });
+  if (!videoUrlString) {
+    return res.status(400).json({ error: 'Video URL is required' });
   }
 
   try {
-    const info = await ytdl.getInfo(videoIdString);
+    const info = await ytdl.getInfo(videoUrlString); // Use videoUrlString here
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const characterAnalysis = analyzeTranscript(transcript);
 
     return res.status(200).json({
-      videoId,
+      videoUrl: videoUrlString, // Return the videoUrl
       videoTitle,
       thumbnailUrl,
       transcript,
