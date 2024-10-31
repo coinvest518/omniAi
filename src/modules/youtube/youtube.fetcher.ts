@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import Bottleneck from 'bottleneck';
-import puppeteer from 'puppeteer';
+import ytdl from 'ytdl-core';
 
 const youtubeTranscriptionSchema = z.object({
   wireMagic: z.literal('pb3'),
@@ -19,14 +18,6 @@ const youtubeTranscriptionSchema = z.object({
   ),
 });
 
-function extractFromTo(html: string, from: string, to: string, label: string): string {
-  const indexStart = html.indexOf(from);
-  const indexEnd = html.indexOf(to, indexStart);
-  if (indexStart < 0 || indexEnd <= indexStart)
-    throw new Error(`[YouTube API Issue] Could not find '${label}'`);
-  return html.substring(indexStart, indexEnd);
-}
-
 interface YouTubeTranscriptData {
   videoId: string;
   videoTitle: string;
@@ -34,57 +25,45 @@ interface YouTubeTranscriptData {
   transcript: string;
 }
 
-const limiter = new Bottleneck({
-  maxConcurrent: 1, // Adjust as needed
-  minTime: 1000, // 1 second delay between requests
-});
+// Define the structure of the captions JSON
+interface CaptionSegment {
+  utf8: string;
+  tOffsetMs?: number;
+}
 
-async function fetchTextWithPuppeteer(url: string): Promise<string> {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle2' });
-  const content = await page.content();
-  await browser.close();
-  return content;
+interface CaptionEvent {
+  segs?: CaptionSegment[];
 }
 
 export async function fetchYouTubeTranscript(videoId: string): Promise<YouTubeTranscriptData> {
-  return limiter.schedule(async () => {
-    // 1. find the captions URL within the video HTML page
-    const html = await fetchTextWithPuppeteer(`https://www.youtube.com/watch?v=${videoId}`);
+  const info = await ytdl.getInfo(videoId);
+  const videoTitle = info.videoDetails.title;
+  const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
-    const captionsUrlEnc = extractFromTo(html, 'https://www.youtube.com/api/timedtext', '"', 'Captions URL');
-    const captionsUrl = decodeURIComponent(captionsUrlEnc.replaceAll('\\u0026', '&'));
-    const thumbnailUrl = extractFromTo(html, 'https://i.ytimg.com/vi/', '"', 'Thumbnail URL').replaceAll('maxres', 'hq');
-    const videoTitle = extractFromTo(html, '<title>', '</title>', 'Video Title').slice(7).replaceAll(' - YouTube', '').trim();
+  // Fetch captions (if available)
+  const captions = info.player_response.captions;
+  let transcript = '';
 
-    // 2. fetch the captions
-    const captions = await fetchTextWithPuppeteer(captionsUrl + `&fmt=json3`);
+  if (captions && captions.playerCaptionsTracklistRenderer) {
+    const tracks = captions.playerCaptionsTracklistRenderer.captionTracks;
+    const englishTrack = tracks.find(track => track.languageCode === 'en'); // or any other language you prefer
+    if (englishTrack) {
+      const captionsUrl = englishTrack.baseUrl;
+      const captionsResponse = await fetch(captionsUrl);
+      const captionsJson = await captionsResponse.json();
 
-    let captionsJson: any;
-    try {
-      captionsJson = JSON.parse(captions);
-    } catch (e) {
-      console.error(e);
-      throw new Error('[YouTube API Issue] Could not parse the captions');
+      // Process captionsJson to extract the transcript
+      transcript = (captionsJson.events as CaptionEvent[]) // Cast to CaptionEvent[]
+        .flatMap(event => event.segs ?? []) // Now event is of type CaptionEvent
+        .map(seg => seg.utf8) // Now seg is of type CaptionSegment
+        .join('');
     }
-    const safeData = youtubeTranscriptionSchema.safeParse(captionsJson);
-    if (!safeData.success) {
-      console.error(safeData.error);
-      throw new Error('[YouTube API Issue] Could not verify the captions');
-    }
+  }
 
-    // 3. flatten to text
-    const transcript = safeData.data.events
-      .flatMap(event => event.segs ?? [])
-      .map(seg => seg.utf8)
-      .join('');
-
-    return {
-      videoId,
-      videoTitle,
-      thumbnailUrl,
-      transcript,
-    };
-  });
+  return {
+    videoId,
+    videoTitle,
+    thumbnailUrl,
+    transcript,
+  };
 }

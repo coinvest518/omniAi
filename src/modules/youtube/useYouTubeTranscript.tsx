@@ -1,5 +1,3 @@
-
-
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -28,7 +26,7 @@ export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (t
     enabled: !!videoID,
     queryKey: ['transcript', videoID],
     queryFn: async () => USE_FRONTEND_FETCH
-      ? fetchYouTubeTranscript(videoID!, url => frontendSideFetch(url).then(res => res.text()))
+      ? fetchYouTubeTranscript(videoID!)
       : apiAsync.youtube.getTranscript.query({ videoId: videoID! }),
     staleTime: Infinity,
   });

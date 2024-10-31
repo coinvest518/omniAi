@@ -1,5 +1,3 @@
-
-
 import { z } from 'zod';
 
 import { createTRPCRouter, publicProcedure } from '~/server/api/trpc.server';
@@ -22,7 +20,7 @@ export const youtubeRouter = createTRPCRouter({
     .input(inputSchema)
     .query(async ({ input }) => {
       const { videoId } = input;
-      return await fetchYouTubeTranscript(videoId, url => fetchTextOrTRPCError(url, 'GET', {}, undefined, 'YouTube Transcript'));
+      return await fetchYouTubeTranscript(videoId);
     }),
 
 });
