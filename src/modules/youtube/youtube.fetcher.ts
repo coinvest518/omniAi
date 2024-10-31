@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import Bottleneck from 'bottleneck';
 
 const youtubeTranscriptionSchema = z.object({
   wireMagic: z.literal('pb3'),
@@ -33,9 +34,17 @@ interface YouTubeTranscriptData {
   transcript: string;
 }
 
+const limiter = new Bottleneck({
+  maxConcurrent: 1, // Adjust as needed
+  minTime: 1000, // 1 second delay between requests
+});
+
 
 export async function fetchYouTubeTranscript(videoId: string, fetchTextFn: (url: string) => Promise<string>): Promise<YouTubeTranscriptData> {
 
+  return limiter.schedule(async () => {
+
+  
   // 1. find the captions URL within the video HTML page
   const html = await fetchTextFn(`https://www.youtube.com/watch?v=${videoId}`);
 
@@ -73,4 +82,5 @@ export async function fetchYouTubeTranscript(videoId: string, fetchTextFn: (url:
     thumbnailUrl,
     transcript,
   };
+});
 }
