@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
-import { analyzeTranscript } from '../api/analyzeTranscript'; // Import the analysis function
+import { analyzeTranscript } from './analyzeTranscript'; // Import the analysis function
 
 type CaptionEvent = { segs?: { utf8: string }[] };
 
