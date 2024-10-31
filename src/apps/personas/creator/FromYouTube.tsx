@@ -81,7 +81,6 @@ export function FromYouTube(props: {
 
   const { onCreate } = props;
   const onNewTranscript = React.useCallback((transcript: YTVideoTranscript) => {
-    // setVideoID(null); // reset the video ID, to cycle the refetch
     onCreate(
       transcript.transcript,
       {
@@ -95,7 +94,9 @@ export function FromYouTube(props: {
 
   const {
     transcript,
-    isFetching, isError, error,
+    isFetching,
+    isError,
+    error,
   } = useYouTubeTranscript(videoID, onNewTranscript);
 
 

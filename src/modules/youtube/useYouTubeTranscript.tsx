@@ -1,14 +1,4 @@
 import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
-
-import { frontendSideFetch } from '~/common/util/clientFetchers';
-
-import { fetchYouTubeTranscript } from './youtube.fetcher';
-import { apiAsync } from '~/common/util/trpc.client';
-
-// configuration
-const USE_FRONTEND_FETCH = false;
-
 
 export interface YTVideoTranscript {
   title: string;
@@ -17,39 +7,48 @@ export interface YTVideoTranscript {
 }
 
 export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
-
-  // state
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
+  const [isFetching, setIsFetching] = React.useState(false);
+  const [isError, setIsError] = React.useState(false);
+  const [error, setError] = React.useState<unknown | null>(null);
 
-  // data
-  const { data, isFetching, isError, error } = useQuery({
-    enabled: !!videoID,
-    queryKey: ['transcript', videoID],
-    queryFn: async () => USE_FRONTEND_FETCH
-      ? fetchYouTubeTranscript(videoID!)
-      : apiAsync.youtube.getTranscript.query({ videoId: videoID! }),
-    staleTime: Infinity,
-  });
-
-  // update the transcript when the underlying data changes
   React.useEffect(() => {
-    if (!data) {
-      // setTranscript(null);
+    if (!videoID) {
       return;
     }
-    const transcript = {
-      title: data.videoTitle,
-      transcript: data.transcript,
-      thumbnailUrl: data.thumbnailUrl,
-    };
-    setTranscript(transcript);
-    onNewTranscript(transcript);
-  }, [data, onNewTranscript]);
 
+    const fetchData = async () => {
+      setIsFetching(true);
+      setIsError(false);
+      setError(null);
+
+      try {
+        // Make a request to your API route
+        const response = await fetch(`/api/youtubeTranscript?videoId=${videoID}`); 
+        const data = await response.json();
+
+        const newTranscript = {
+          title: data.videoTitle,
+          transcript: data.transcript,
+          thumbnailUrl: data.thumbnailUrl,
+        };
+        setTranscript(newTranscript);
+        onNewTranscript(newTranscript);
+      } catch (err) {
+        setIsError(true);
+        setError(err);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchData();
+  }, [videoID, onNewTranscript]);
 
   return {
     transcript,
     isFetching,
-    isError, error,
+    isError,
+    error,
   };
 }
