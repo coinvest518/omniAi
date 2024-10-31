@@ -1,16 +1,15 @@
-
-
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
-
 import { frontendSideFetch } from '~/common/util/clientFetchers';
-
 import { fetchYouTubeTranscript } from './youtube.fetcher';
 import { apiAsync } from '~/common/util/trpc.client';
 
-// configuration
-const USE_FRONTEND_FETCH = false;
-
+// Define the API response type
+interface YouTubeTranscriptResponse {
+  videoTitle: string;
+  transcript: string;
+  thumbnailUrl: string;
+}
 
 export interface YTVideoTranscript {
   title: string;
@@ -18,28 +17,42 @@ export interface YTVideoTranscript {
   thumbnailUrl: string;
 }
 
-export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
+// configuration
+const USE_FRONTEND_FETCH = false;
 
+export function useYouTubeTranscript(
+  videoID: string | null, 
+  onNewTranscript: (transcript: YTVideoTranscript) => void
+) {
   // state
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
 
   // data
-  const { data, isFetching, isError, error } = useQuery({
+  const { data, isFetching, isError, error } = useQuery<YouTubeTranscriptResponse>({
     enabled: !!videoID,
     queryKey: ['transcript', videoID],
-    queryFn: async () => USE_FRONTEND_FETCH
-      ? fetchYouTubeTranscript(videoID!, url => frontendSideFetch(url).then(res => res.text()))
-      : apiAsync.youtube.getTranscript.query({ videoId: videoID! }),
+    queryFn: async () => {
+      if (!videoID) throw new Error('No video ID provided');
+      
+      if (USE_FRONTEND_FETCH) {
+        return fetchYouTubeTranscript(videoID, url => 
+          frontendSideFetch(url).then(res => res.text())
+        ) as Promise<YouTubeTranscriptResponse>;
+      }
+      
+      return apiAsync.youtube.getTranscript.query({ 
+        videoId: videoID 
+      }) as Promise<YouTubeTranscriptResponse>;
+    },
     staleTime: Infinity,
   });
 
   // update the transcript when the underlying data changes
   React.useEffect(() => {
     if (!data) {
-      // setTranscript(null);
       return;
     }
-    const transcript = {
+    const transcript: YTVideoTranscript = {
       title: data.videoTitle,
       transcript: data.transcript,
       thumbnailUrl: data.thumbnailUrl,
@@ -48,10 +61,10 @@ export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (t
     onNewTranscript(transcript);
   }, [data, onNewTranscript]);
 
-
   return {
     transcript,
     isFetching,
-    isError, error,
+    isError,
+    error,
   };
 }
