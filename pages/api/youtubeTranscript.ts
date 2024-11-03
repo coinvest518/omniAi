@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { url } = req.body; // Get videoUrl from request body
 
-  if (url) return res.status(400).json({ error: 'Video URL is required' });
+  // Corrected the condition to check for missing url
+  if (!url) return res.status(400).json({ error: 'Video URL is required' });
 
   try {
     const info = await ytdl.getInfo(url);
@@ -31,3 +32,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: `Failed to process video: ${errorMessage}` });
   }
 }
+
