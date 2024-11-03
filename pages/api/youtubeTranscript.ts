@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { analyzeTranscript } from './analyzeTranscript';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { videoUrl } = req.body;
+  const { videoUrl } = req.query;
 
   if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' })
 
