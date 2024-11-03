@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 export interface YTVideoTranscript {
-  videoUrl: string;
+  url: string;
   title: string;
   transcript: string;
   thumbnailUrl: string;
@@ -35,7 +35,7 @@ export function useYouTubeTranscript(
         const data = await response.json();
 
         const newTranscript = {
-          videoUrl: data.videoUrl,
+          url: data.url,
           title: data.videoTitle,
           transcript: data.transcript,
           thumbnailUrl: data.thumbnailUrl,
