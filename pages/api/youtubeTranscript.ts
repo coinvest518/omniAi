@@ -6,7 +6,7 @@ import { analyzeTranscript } from './analyzeTranscript'; // Import the analysis 
 type CaptionEvent = { segs?: { utf8: string }[] };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { videoUrl } = req.query; // Expecting videoUrl instead of videoId
+  const { videoUrl } = req.query;
 
   const videoUrlString = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
 
@@ -15,34 +15,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const info = await ytdl.getInfo(videoUrlString); // Use videoUrlString here
+    const info = await ytdl.getInfo(videoUrlString);
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
-    const captions = info.player_response.captions;
+    // Retrieve caption tracks directly
+    const captionTracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    const transcriptUrl = captionTracks?.find(track => track.languageCode === 'en')?.baseUrl;
 
-    let transcript = '';
-
-    if (captions && captions.playerCaptionsTracklistRenderer) {
-      const tracks = captions.playerCaptionsTracklistRenderer.captionTracks;
-      const englishTrack = tracks.find(track => track.languageCode === 'en');
-      if (englishTrack) {
-        const captionsUrl = englishTrack.baseUrl;
-        const captionsResponse = await fetch(captionsUrl);
-        const captionsJson = await captionsResponse.json();
-
-        transcript = (captionsJson.events as CaptionEvent[])
-          .flatMap(event => event.segs ?? [])
-          .map(seg => seg.utf8)
-          .join('');
-      }
+    if (!transcriptUrl) {
+      return res.status(400).json({ error: 'No transcript available for this video' });
     }
+
+    // Fetch and process transcript from the transcript URL
+    const captionsResponse = await fetch(transcriptUrl);
+    const captionsJson = await captionsResponse.json();
+
+    const transcript = (captionsJson.events as CaptionEvent[])
+      .flatMap(event => event.segs ?? [])
+      .map(seg => seg.utf8)
+      .join('');
 
     // Analyze the transcript
     const characterAnalysis = analyzeTranscript(transcript);
 
     return res.status(200).json({
-      videoUrl: videoUrlString, // Return the videoUrl
+      videoUrl: videoUrlString,
       videoTitle,
       thumbnailUrl,
       transcript,
