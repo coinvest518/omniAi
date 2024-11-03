@@ -18,8 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
     const captionTracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    const transcriptUrl = captionTracks?.find(track => track.languageCode === 'en')?.baseUrl;
-
+    const transcriptUrl = (captionTracks as { languageCode: string; baseUrl: string }[])?.find(track => track.languageCode === 'en')?.baseUrl;
     if (!transcriptUrl) return res.status(400).json({ error: 'No transcript available' });
 
     const captionsResponse = await fetch(transcriptUrl);
