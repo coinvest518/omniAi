@@ -25,7 +25,13 @@ export function useYouTubeTranscript(
       setError(null);
 
       try {
-        const response = await fetch(`/api/youtubeTranscript?videoUrl=${encodeURIComponent(videoUrl)}`);
+        const response = await fetch('/api/youtubeTranscript', { // No query parameter
+          method: 'POST', // Use POST request
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ videoUrl }), // Send videoUrl in the body
+        });
         const data = await response.json();
 
         const newTranscript = {
