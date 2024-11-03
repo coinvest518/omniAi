@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextApiRequest, NextApiResponse } from 'next';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
 import { analyzeTranscript } from './analyzeTranscript';
 
-export async function POST(req: Request) {
-  const { url } = await req.json(); // Get video URL from the request body
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { url } = req.body; // Extract video URL from request body
 
   if (!url) {
-    return NextResponse.json({ error: 'Video URL is required' }, { status: 400 });
+    return res.status(400).json({ error: 'Video URL is required' });
   }
 
   try {
@@ -19,21 +23,19 @@ export async function POST(req: Request) {
     const transcriptUrl = captionTracks?.find(track => track.languageCode === 'en')?.baseUrl;
 
     if (!transcriptUrl) {
-      return NextResponse.json({ error: 'No transcript available for this video' }, { status: 400 });
+      return res.status(400).json({ error: 'No transcript available' });
     }
 
     const captionsResponse = await fetch(transcriptUrl);
     const captionsText = await captionsResponse.text();
 
-    // Process the transcript using your own analysis function
-    const transcript = analyzeTranscript(captionsText); 
+    // Process the transcript using analyzeTranscript function
+    const transcript = analyzeTranscript(captionsText);
 
-    return NextResponse.json({ videoTitle, thumbnailUrl, transcript });
+    return res.status(200).json({ videoTitle, thumbnailUrl, transcript });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    return NextResponse.json({ error: `Failed to process video: ${errorMessage}` }, { status: 500 });
+    return res.status(500).json({ error: `Failed to process video: ${errorMessage}` });
   }
 }
-
-
