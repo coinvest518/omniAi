@@ -17,7 +17,7 @@ export function analyzeTranscript(transcript: string): CharacterAnalysis {
 
   // Example manual analysis (replace with your actual logic):
   const ageClues = transcript.match(/(\d+)\s*(years\s*old|year\s*old|yo)/i);
-  const age = ageClues ? parseInt(ageClues[1], 10) : null;
+  const age = ageClues && ageClues[1] ? parseInt(ageClues[1], 10) : null;
 
   const professionClues = transcript.match(/(software\s*engineer|doctor|teacher|entrepreneur)/gi);
   const profession = professionClues ? professionClues[0] : null;
