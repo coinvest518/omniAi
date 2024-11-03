@@ -79,7 +79,7 @@ const PricingTable: React.FC = () => {
                     <li><i className="fa fa-check" aria-hidden="true"></i> 24/7 Discord Chat Support</li>
                   </ul>
                 </div>
-                <a onClick={() => handleCheckout("price_1PMAlHE4H116aDHAAEluoUjo", "Omni Starter")}>Order Now</a>
+                <a onClick={() => handleCheckout("price_1PtYXeE4H116aDHAFyye0Pov", "Omni Starter")}>Order Now</a>
               </div>                              
             </div>
             {/* END Col one */}
@@ -103,7 +103,7 @@ const PricingTable: React.FC = () => {
                     <li><i className="fa fa-check" aria-hidden="true"></i> 24/7 Discord Chat Support</li>
                   </ul>
                 </div>
-                <a onClick={() => handleCheckout("price_1PMAlHE4H116aDHAQrWOqRmM", "Omni Quantum")}>Order Now</a>
+                <a onClick={() => handleCheckout("price_1PtYXeE4H116aDHA2gg2r8yK", "Omni Quantum")}>Order Now</a>
               </div>
             </div>
             {/* END Col two */}
@@ -127,7 +127,7 @@ const PricingTable: React.FC = () => {
                     <li><i className="fa fa-check" aria-hidden="true"></i> Advanced security features</li>
                   </ul>
                 </div>
-                <a onClick={() => handleCheckout("price_1Mky16E4H116aDHAXFh3PfV4", "Omni Enterprise Stellar")}>Order Now</a>
+                <a onClick={() => handleCheckout("price_1PtYXeE4H116aDHABZTcpQdo", "Omni Enterprise Stellar")}>Order Now</a>
               </div>
             </div>
             {/* END Col three */}
