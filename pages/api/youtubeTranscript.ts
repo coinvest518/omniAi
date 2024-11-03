@@ -1,52 +1,31 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
-import { analyzeTranscript } from './analyzeTranscript'; // Import the analysis function
-
-type CaptionEvent = { segs?: { utf8: string }[] };
+import { analyzeTranscript } from './analyzeTranscript';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { videoUrl } = req.query;
+  const { videoUrl } = req.body;
 
-  const videoUrlString = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
-
-  if (!videoUrlString) {
-    return res.status(400).json({ error: 'Video URL is required' });
-  }
+  if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' })
 
   try {
-    const info = await ytdl.getInfo(videoUrlString);
+    const info = await ytdl.getInfo(videoUrl as string);
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
-    // Retrieve caption tracks directly
     const captionTracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
     const transcriptUrl = captionTracks?.find(track => track.languageCode === 'en')?.baseUrl;
 
-    if (!transcriptUrl) {
-      return res.status(400).json({ error: 'No transcript available for this video' });
-    }
+    if (!transcriptUrl) return res.status(400).json({ error: 'No transcript available' })
 
-    // Fetch and process transcript from the transcript URL
     const captionsResponse = await fetch(transcriptUrl);
-    const captionsJson = await captionsResponse.json();
+    const captionsText = await captionsResponse.text();
 
-    const transcript = (captionsJson.events as CaptionEvent[])
-      .flatMap(event => event.segs ?? [])
-      .map(seg => seg.utf8)
-      .join('');
-
-    // Analyze the transcript
-    const characterAnalysis = analyzeTranscript(transcript);
-
-    return res.status(200).json({
-      videoUrl: videoUrlString,
-      videoTitle,
-      thumbnailUrl,
-      transcript,
-      characterAnalysis,
-    });
+    const transcript = analyzeTranscript(captionsText);
+    res.status(200).json({ videoTitle, thumbnailUrl, transcript });
   } catch (error) {
-    return res.status(500).json({ error: `Failed to process video: ${(error as Error).message}` });
+    // Cast `error` to an instance of `Error` to safely access `error.message`
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    res.status(500).json({ error: `Failed to process video: ${errorMessage}` });
   }
 }

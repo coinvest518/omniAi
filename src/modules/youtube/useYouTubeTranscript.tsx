@@ -1,22 +1,23 @@
 import * as React from 'react';
 
 export interface YTVideoTranscript {
-  videoUrl: string; // Add videoUrl to the interface
+  videoUrl: string;
   title: string;
   transcript: string;
   thumbnailUrl: string;
 }
 
-export function useYouTubeTranscript(videoUrl: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
+export function useYouTubeTranscript(
+  videoUrl: string | null,
+  onNewTranscript: (transcript: YTVideoTranscript) => void
+) {
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
   const [isFetching, setIsFetching] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
   const [error, setError] = React.useState<unknown | null>(null);
 
   React.useEffect(() => {
-    if (!videoUrl) {
-      return;
-    }
+    if (!videoUrl) return;
 
     const fetchData = async () => {
       setIsFetching(true);
@@ -24,12 +25,11 @@ export function useYouTubeTranscript(videoUrl: string | null, onNewTranscript: (
       setError(null);
 
       try {
-        // Send the full videoUrl to the API
-        const response = await fetch(`/api/youtubeTranscript?videoUrl=${encodeURIComponent(videoUrl)}`); 
+        const response = await fetch(`/api/youtubeTranscript?videoUrl=${encodeURIComponent(videoUrl)}`);
         const data = await response.json();
 
         const newTranscript = {
-          videoUrl: data.videoUrl, // Store the videoUrl
+          videoUrl: data.videoUrl,
           title: data.videoTitle,
           transcript: data.transcript,
           thumbnailUrl: data.thumbnailUrl,
@@ -45,12 +45,7 @@ export function useYouTubeTranscript(videoUrl: string | null, onNewTranscript: (
     };
 
     fetchData();
-  }, [videoUrl, onNewTranscript]); // Include videoUrl in the dependency array
+  }, [videoUrl, onNewTranscript]);
 
-  return {
-    transcript,
-    isFetching,
-    isError,
-    error,
-  };
+  return { transcript, isFetching, isError, error };
 }
