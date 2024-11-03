@@ -13,9 +13,9 @@ import { Alert, Box, Button, Card, IconButton, Input, Typography } from '@mui/jo
 import type { SimplePersonaProvenance } from '../store-app-personas';
 
 
-function extractVideoID(videoURL: string): string | null {
+function extractVideoID(url: string): string | null {
   const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^#&?]*).*/;
-  const match = videoURL.match(regExp);
+  const match = url.match(regExp);
   return (match && match[1]?.length == 11) ? match[1] : null;
 }
 
@@ -74,7 +74,7 @@ export function FromYouTube(props: {
 }) {
 
   // state
-  const [videoURL, setVideoURL] = React.useState('');
+  const [url, setUrl] = React.useState('');
   const [videoID, setVideoID] = React.useState<string | null>(null);
 
   // external state
@@ -85,12 +85,12 @@ export function FromYouTube(props: {
       transcript.transcript,
       {
         type: 'youtube',
-        url: videoURL,
+        url: url,
         title: transcript.title,
         thumbnailUrl: transcript.thumbnailUrl,
       },
     );
-  }, [onCreate, videoURL]);
+  }, [onCreate, url]);
 
   const {
     transcript,
@@ -102,15 +102,15 @@ export function FromYouTube(props: {
 
   const handleVideoURLChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVideoID(null);
-    setVideoURL(e.target.value);
+    setUrl(e.target.value);
   };
 
   const handleCreateFromTranscript = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // stop the form submit
 
-    const videoId = extractVideoID(videoURL) || null;
+    const videoId = extractVideoID(url) || null;
     if (!videoId)
-      setVideoURL('Invalid');
+      setUrl('Invalid');
 
     // kick-start the transcript fetch
     setVideoID(videoId);
@@ -131,7 +131,7 @@ export function FromYouTube(props: {
         disabled={isFetching || props.isTransforming}
         variant='outlined'
         placeholder='YouTube Video URL'
-        value={videoURL}
+        value={url}
         onChange={handleVideoURLChange}
         sx={{ mb: 1.5, backgroundColor: 'background.popup' }}
       />
@@ -139,7 +139,7 @@ export function FromYouTube(props: {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button
           type='submit' variant='solid'
-          disabled={isFetching || props.isTransforming || !videoURL}
+          disabled={isFetching || props.isTransforming || !url}
           loading={isFetching}
           sx={{ minWidth: 140 }}
         >
@@ -147,7 +147,7 @@ export function FromYouTube(props: {
         </Button>
 
         <GoodTooltip title='This example comes from the popular Fireship YouTube channel, which presents technical topics with irreverent humor.'>
-          <Button variant='outlined' color='neutral' onClick={() => setVideoURL('https://www.youtube.com/watch?v=M_wZpSEvOkc')}>
+          <Button variant='outlined' color='neutral' onClick={() => setUrl('https://www.youtube.com/watch?v=M_wZpSEvOkc')}>
             Example
           </Button>
         </GoodTooltip>

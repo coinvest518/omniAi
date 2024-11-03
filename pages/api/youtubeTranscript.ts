@@ -8,12 +8,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { videoUrl } = req.body; // Get videoUrl from request body
+  const { url } = req.body; // Get videoUrl from request body
 
-  if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' });
+  if (url) return res.status(400).json({ error: 'Video URL is required' });
 
   try {
-    const info = await ytdl.getInfo(videoUrl);
+    const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 

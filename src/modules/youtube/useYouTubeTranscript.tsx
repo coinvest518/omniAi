@@ -8,7 +8,7 @@ export interface YTVideoTranscript {
 }
 
 export function useYouTubeTranscript(
-  videoUrl: string | null,
+  url: string | null,
   onNewTranscript: (transcript: YTVideoTranscript) => void
 ) {
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
@@ -17,7 +17,7 @@ export function useYouTubeTranscript(
   const [error, setError] = React.useState<unknown | null>(null);
 
   React.useEffect(() => {
-    if (!videoUrl) return;
+    if (!url) return;
 
     const fetchData = async () => {
       setIsFetching(true);
@@ -30,7 +30,7 @@ export function useYouTubeTranscript(
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ videoUrl }), // Send videoUrl in the body
+          body: JSON.stringify({ url }), // Send videoUrl in the body
         });
         const data = await response.json();
 
@@ -51,7 +51,7 @@ export function useYouTubeTranscript(
     };
 
     fetchData();
-  }, [videoUrl, onNewTranscript]);
+  }, [url, onNewTranscript]);
 
   return { transcript, isFetching, isError, error };
 }
