@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: [ 'card',  'cashapp', 'paypal', 'link'],
+      payment_method_types: [ 'card',  'cashapp',  'link'],
       line_items: [
         {
           price: priceId,

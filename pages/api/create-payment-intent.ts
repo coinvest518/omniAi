@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'usd',
-      payment_method_types: [ 'card',  'klarna', 'alipay', 'afterpay_clearpay', 'cashapp', 'paypal', 'zip', 'link'],
+      payment_method_types: [ 'card',  'klarna', 'alipay', 'afterpay_clearpay', 'cashapp',  'zip', 'link'],
       metadata: { userId: auth.userId },
     });
 
