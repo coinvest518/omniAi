@@ -1,3 +1,4 @@
+// Import required modules
 import { NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
 
-    // Find English transcript (updated)
+    // Find English transcript
     const tracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
     if (tracks) {
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Generic fallback for unexpected errors
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }
