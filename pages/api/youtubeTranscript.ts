@@ -1,13 +1,13 @@
-// Import required modules
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
 import { analyzeTranscript } from './analyzeTranscript';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json(); // Ensure this is correct
-    if (!body?.url) {
+    // Parse JSON safely
+    const body = await req.json().catch(() => null);
+    if (!body || !body.url) {
       return NextResponse.json(
         { error: 'Missing or invalid URL in request body' },
         { status: 400 }
@@ -31,43 +31,29 @@ export async function POST(req: Request) {
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
 
-    // Find English transcript
-    const tracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    // Locate English transcript
+    const tracks = info.player_response?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    const transcriptUrl = tracks?.find(track => track.languageCode === 'en')?.baseUrl;
 
-    if (tracks) {
-      const transcriptUrl = tracks.find(track => track.languageCode === 'en')?.baseUrl;
-
-      if (transcriptUrl) { 
-        const transcriptResponse = await fetch(transcriptUrl);
-        console.log('Transcript response headers:', transcriptResponse.headers);
-        if (!transcriptResponse.ok) {
-          console.error('Error fetching transcript:', transcriptResponse.statusText);
-          throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
-        }
-
-        let transcriptText = await transcriptResponse.text();
-
-        // Process transcript
-        const transcript = analyzeTranscript(transcriptText);
-
-        // Return successful response
-        return NextResponse.json({
-          success: true,
-          data: {
-            videoTitle,
-            thumbnailUrl,
-            transcript
-          }
-        });
-      } else {
-        // Handle the case where 'transcriptUrl' is undefined
-        return NextResponse.json(
-          { error: 'No English transcript available for this video' },
-          { status: 404 }
-        );
+    if (transcriptUrl) {
+      const transcriptResponse = await fetch(transcriptUrl);
+      if (!transcriptResponse.ok) {
+        throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
       }
+
+      const transcriptText = await transcriptResponse.text();
+      const transcript = analyzeTranscript(transcriptText);
+
+      // Return successful response
+      return NextResponse.json({
+        success: true,
+        data: {
+          videoTitle,
+          thumbnailUrl,
+          transcript
+        }
+      });
     } else {
-      // Handle the case where 'tracks' is undefined
       return NextResponse.json(
         { error: 'No English transcript available for this video' },
         { status: 404 }
@@ -75,24 +61,6 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error('API Error:', error);
-
-    // Determine if error is a known type
-    const isYTDLError = error instanceof Error && error.message.includes('ytdl');
-    const isFetchError = error instanceof Error && error.message.includes('fetch');
-
-    if (isYTDLError) {
-      return NextResponse.json(
-        { error: 'Failed to process YouTube video' },
-        { status: 500 }
-      );
-    } else if (isFetchError) {
-      return NextResponse.json(
-        { error: 'Failed to fetch transcript' },
-        { status: 503 }
-      );
-    }
-
-    // Generic fallback for unexpected errors
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }
@@ -100,8 +68,7 @@ export async function POST(req: Request) {
   }
 }
 
-// Add this default export to the file
-export default function handler(req: Request, res: Response) {
+export default async function handler(req: NextRequest) {
   if (req.method === 'POST') {
     return POST(req);
   } else {
