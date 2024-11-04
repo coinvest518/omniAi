@@ -1,3 +1,4 @@
+// pages/api/youtubeTranscript.js
 import { NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
@@ -31,46 +32,49 @@ export async function POST(req: Request) {
     // Extract video details
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
-    const captionTracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
-    // Find English transcript
-    const transcriptTrack = captionTracks?.find(
-      (track: any) => track.languageCode === 'en'
-    );
+    // Find English transcript (updated)
+    const tracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
-    if (!transcriptTrack?.baseUrl) {
+    if (tracks) {
+      const transcriptUrl = tracks.find(track => track.languageCode === 'en')?.baseUrl;
+
+      if (transcriptUrl) { 
+        const transcriptResponse = await fetch(transcriptUrl);
+        console.log('Transcript response headers:', transcriptResponse.headers);
+        if (!transcriptResponse.ok) {
+          console.error('Error fetching transcript:', transcriptResponse.statusText);
+          throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
+        }
+
+        let transcriptText = await transcriptResponse.text();
+
+        // Process transcript
+        const transcript = analyzeTranscript(transcriptText);
+
+        // Return successful response
+        return NextResponse.json({
+          success: true,
+          data: {
+            videoTitle,
+            thumbnailUrl,
+            transcript
+          }
+        });
+      } else {
+        // Handle the case where 'transcriptUrl' is undefined
+        return NextResponse.json(
+          { error: 'No English transcript available for this video' },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Handle the case where 'tracks' is undefined
       return NextResponse.json(
         { error: 'No English transcript available for this video' },
         { status: 404 }
       );
     }
-
-    // Fetch transcript
-    const transcriptResponse = await fetch(transcriptTrack.baseUrl);
-    console.log('Transcript response headers:', transcriptResponse.headers); // Log headers
-    if (!transcriptResponse.ok) {
-      console.error('Error fetching transcript:', transcriptResponse.statusText);
-      throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
-    }
-
-    const transcriptText = await transcriptResponse.text();
-    if (!transcriptText) {
-      throw new Error('Empty transcript received');
-    }
-
-    // Process transcript
-    const transcript = analyzeTranscript(transcriptText);
-
-    // Return successful response
-    return NextResponse.json({
-      success: true,
-      data: {
-        videoTitle,
-        thumbnailUrl,
-        transcript
-      }
-    });
-
   } catch (error) {
     console.error('API Error:', error);
 
