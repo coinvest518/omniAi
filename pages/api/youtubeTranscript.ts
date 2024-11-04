@@ -1,59 +1,112 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
-import { analyzeTranscript, CharacterAnalysis } from './analyzeTranscript';
+import { analyzeTranscript } from './analyzeTranscript';
+import { AssemblyAI } from 'assemblyai';
+import { Readable } from 'stream';
 
-export interface YTVideoTranscript {
-  title: string;
-  transcript: string;
-  thumbnailUrl?: string;
+const client = new AssemblyAI({
+  apiKey: 'dcf3ac04cf8a404d8554a56bbe32fde6'
+});
+
+async function downloadAudio(videoUrl: string): Promise<Readable> {
+  return ytdl(videoUrl, { filter: 'audioonly' });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+async function transcribeAudio(audio: Readable): Promise<string | null | undefined> {
+  const transcript = await client.transcripts.transcribe({
+    audio,
+    speaker_labels: true
+  });
 
-  const { url } = req.body;
+  return transcript.text;
+}
 
-  if (!url) {
-    return res.status(400).json({ error: 'YouTube URL is required' });
-  }
-
+export async function POST(req: Request) {
   try {
-    // Fetch video info from YouTube
-    const videoInfo = await ytdl.getInfo(url);
-    const captions = videoInfo.player_response.captions;
-
-    if (!captions || !captions.playerCaptionsTracklistRenderer) {
-      throw new Error('No captions found for this video.');
+    const body = await req.json();
+    if (!body?.url) {
+      return NextResponse.json(
+        { error: 'Missing or invalid URL in request body' },
+        { status: 400 }
+      );
     }
 
-    const transcriptUrl = captions.playerCaptionsTracklistRenderer.captionTracks[0]?.baseUrl;
-
-    if (!transcriptUrl) {
-      throw new Error('Transcript URL not found.');
+    if (!ytdl.validateURL(body.url)) {
+      return NextResponse.json(
+        { error: 'Invalid YouTube URL' },
+        { status: 400 }
+      );
     }
 
-    const transcriptResponse = await fetch(transcriptUrl);
-    const transcriptData = await transcriptResponse.text(); // Assuming transcript is in text format
-
-    console.log("Transcript Data:", transcriptData); // Log transcript data for debugging
-
-    // Analyze the transcript
-    const characterAnalysis: CharacterAnalysis = analyzeTranscript(transcriptData);
-
-    return res.status(200).json({ 
-      title: videoInfo.videoDetails.title,
-      transcript: transcriptData,
-      thumbnailUrl: videoInfo.videoDetails.thumbnails[0]?.url,
-      analysis: characterAnalysis
+    // Fetch video information
+    const info = await ytdl.getInfo(body.url).catch((error) => {
+      console.error('Failed to fetch video info:', error);
+      throw new Error('Failed to fetch video information');
     });
 
-  } catch (error) {
-    console.error("Error fetching or analyzing transcript:", error);
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
+    // Extract video details
+    const videoTitle = info.videoDetails.title;
+    const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
+
+    // Download audio
+    const audioStream: Readable = await downloadAudio(body.url);
+
+    // Transcribe audio with AssemblyAI
+    const transcriptText: string | null | undefined = await transcribeAudio(audioStream);
+
+    // Check if transcriptText is a string
+    if (typeof transcriptText !== 'string') {
+      throw new Error('Transcription failed or returned an invalid result');
     }
-    return res.status(500).json({ error: "Failed to process the transcript" });
+
+    // Process transcript
+    const transcript = analyzeTranscript(transcriptText);
+
+    // Return successful response
+    return NextResponse.json({
+      success: true,
+      data: {
+        videoTitle,
+        thumbnailUrl,
+        transcript
+      }
+    });
+  } catch (error) {
+    console.error('API Error:', error);
+
+    const isYTDLError = error instanceof Error && error.message.includes('ytdl');
+    const isFetchError = error instanceof Error && error.message.includes('fetch');
+    const isAssemblyAIError = error instanceof Error && error.message.includes('AssemblyAI');
+
+    if (isYTDLError) {
+      return NextResponse.json(
+        { error: 'Failed to process YouTube video' },
+        { status: 500 }
+      );
+    } else if (isFetchError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch transcript' },
+        { status: 503 }
+      );
+    } else if (isAssemblyAIError) {
+      return NextResponse.json(
+        { error: 'Failed to transcribe audio with AssemblyAI' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
+}
+
+// Add this default export to the file
+export default function handler(req: Request, res: Response) {
+  if (req.method === 'POST') {
+    return POST(req);
+  } else {
+    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
   }
 }
