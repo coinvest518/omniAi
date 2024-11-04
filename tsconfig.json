@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    /* Base Options: */
+    /* Base Options */
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2022",
@@ -20,7 +20,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "preserve",
-    "plugins": [{"name": "next"}],
+    "plugins": [{ "name": "next" }],
     "incremental": true,
 
     /* Custom options */
@@ -30,16 +30,22 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-        "@/*": ["src/*"],
+      "@/*": ["src/*"],
       "~/common/*": ["src/common/*"],
       "~/modules/*": ["src/modules/*"],
       "~/server/*": ["src/server/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/@types"]
+    "types": ["node", "axios"]
+
+   
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
-    // this is here only because otherwise, during standalone build the process would update this file
-    "dist/types/**/*.ts"
-, "pages/api/youtube.ts"  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "dist/types/**/*.ts",
+    "pages/api/youtube.ts"
+  ],
   "exclude": ["node_modules", "dist", "electron"]
 }
