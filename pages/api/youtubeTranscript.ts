@@ -1,72 +1,48 @@
-import { NextRequest, NextResponse } from 'next/server';
+// pages/api/youtubeTranscript.ts
+
+import type { NextApiRequest, NextApiResponse } from 'next';
 import ytdl from 'ytdl-core';
-import fetch from 'node-fetch';
-import { analyzeTranscript } from './analyzeTranscript';
+import { analyzeTranscript, CharacterAnalysis } from './analyzeTranscript'; // Import your analyzeTranscript function
 
-// Specify Node.js runtime
-export const runtime = 'nodejs';
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    const { url } = req.body; // Get the URL from the request body
 
-export async function POST(req: NextRequest) {
-  try {
-    // Parse JSON safely
-    const body = await req.json().catch(() => null);
-    if (!body || !body.url) {
-      return NextResponse.json(
-        { error: 'Missing or invalid URL in request body' },
-        { status: 400 }
-      );
-    }
-
-    if (!ytdl.validateURL(body.url)) {
-      return NextResponse.json(
-        { error: 'Invalid YouTube URL' },
-        { status: 400 }
-      );
-    }
-
-    // Fetch video information
-    const info = await ytdl.getInfo(body.url).catch((error) => {
-      console.error('Failed to fetch video info:', error);
-      throw new Error('Failed to fetch video information');
-    });
-
-    // Extract video details
-    const videoTitle = info.videoDetails.title;
-    const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
-
-    // Locate English transcript
-    const tracks = info.player_response?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    const transcriptUrl = tracks?.find(track => track.languageCode === 'en')?.baseUrl;
-
-    if (transcriptUrl) {
-      const transcriptResponse = await fetch(transcriptUrl);
-      if (!transcriptResponse.ok) {
-        throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
+    try {
+      // Validate URL
+      if (!url || !ytdl.validateURL(url)) {
+        return res.status(400).json({ error: 'Invalid YouTube URL' });
       }
 
-      const transcriptText = await transcriptResponse.text();
-      const transcript = analyzeTranscript(transcriptText);
+      // Fetch the video information using ytdl-core
+      const info = await ytdl.getBasicInfo(url);
+      
+      // Check if captions exist
+      const captions = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+      if (!captions || captions.length === 0) {
+        return res.status(404).json({ error: 'No transcript available for this video.' });
+      }
 
-      // Return successful response
-      return NextResponse.json({
-        success: true,
-        data: {
-          videoTitle,
-          thumbnailUrl,
-          transcript
-        }
+      // Fetch the actual transcript text from the first track
+      const transcriptUrl = captions[0].baseUrl; // Assuming we want the first caption track
+      const transcriptResponse = await fetch(transcriptUrl);
+      const transcriptData = await transcriptResponse.text();
+
+      // Call the analyzeTranscript function and get the analysis
+      const analyzedData: CharacterAnalysis = analyzeTranscript(transcriptData);
+
+      // Respond with the analysis data
+      return res.status(200).json({
+        videoTitle: info.videoDetails.title, // Use the actual video title
+        transcript: analyzedData, // Include the analyzed data in the response
+        thumbnailUrl: info.videoDetails.thumbnails[0].url, // Use the actual thumbnail URL
       });
-    } else {
-      return NextResponse.json(
-        { error: 'No English transcript available for this video' },
-        { status: 404 }
-      );
+    } catch (error) {
+      console.error("Error fetching or analyzing transcript:", error);
+      return res.status(500).json({ error: "Failed to process the transcript" });
     }
-  } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
+  } else {
+    // Handle any other HTTP method
+    return res.setHeader('Allow', ['POST']).status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
