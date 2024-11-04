@@ -1,5 +1,3 @@
-
-
 import * as React from 'react';
 import type { SxProps } from '@mui/joy/styles/types';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -7,7 +5,6 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import { GoodTooltip } from '~/common/components/GoodTooltip';
 import { Alert, Box, Button, Card, IconButton, Input, Typography } from '@mui/joy';
 import { useYouTubeTranscript, YTVideoTranscript } from '~/modules/youtube/useYouTubeTranscript';
-
 
 import type { SimplePersonaProvenance } from '../store-app-personas';
 
@@ -80,9 +77,10 @@ export function FromYouTube(props: {
   const [url, setUrl] = React.useState('');
   const [videoID, setVideoID] = React.useState<string | null>(null);
   const [localError, setLocalError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false); // Loading state
+  const { onCreate } = props;
 
   // Handlers
-  const { onCreate } = props;
   const onNewTranscript = React.useCallback((transcript: YTVideoTranscript) => {
     onCreate(
       transcript.transcript,
@@ -95,12 +93,7 @@ export function FromYouTube(props: {
     );
   }, [onCreate, url]);
 
-  const {
-    transcript,
-    isFetching,
-    isError,
-    error,
-  } = useYouTubeTranscript(videoID, onNewTranscript);
+  const { transcript, isFetching, isError, error } = useYouTubeTranscript(videoID, onNewTranscript);
 
   const handleVideoURLChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalError(null);
@@ -108,18 +101,34 @@ export function FromYouTube(props: {
     setUrl(e.target.value);
   };
 
-  const handleCreateFromTranscript = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateFromTranscript = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true); // Start loading state
     setLocalError(null);
 
     const videoId = extractVideoID(url);
     if (!videoId) {
       setLocalError('Please enter a valid YouTube URL');
+      setLoading(false); // End loading state
       return;
     }
 
     setVideoID(videoId);
+    setLoading(false); // End loading state
   };
+
+  // Logging for debugging
+  React.useEffect(() => {
+    if (videoID) {
+      console.log(`Fetching transcript for video ID: ${videoID}`);
+    }
+  }, [videoID]);
+
+  React.useEffect(() => {
+    if (isError) {
+      console.error('Error fetching transcript:', error);
+    }
+  }, [isError, error]);
 
   return (
     <>
@@ -132,7 +141,7 @@ export function FromYouTube(props: {
           required
           type='url'
           fullWidth
-          disabled={isFetching || props.isTransforming}
+          disabled={isFetching || props.isTransforming || loading}
           variant='outlined'
           placeholder='YouTube Video URL'
           value={url}
@@ -145,8 +154,8 @@ export function FromYouTube(props: {
           <Button
             type='submit'
             variant='solid'
-            disabled={isFetching || props.isTransforming || !url}
-            loading={isFetching}
+            disabled={isFetching || props.isTransforming || !url || loading}
+            loading={isFetching || loading}
             sx={{ minWidth: 140 }}
           >
             Create

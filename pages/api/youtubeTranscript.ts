@@ -1,48 +1,59 @@
-// pages/api/youtubeTranscript.ts
-
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import ytdl from 'ytdl-core';
-import { analyzeTranscript, CharacterAnalysis } from './analyzeTranscript'; // Import your analyzeTranscript function
+import { analyzeTranscript, CharacterAnalysis } from './analyzeTranscript';
+
+export interface YTVideoTranscript {
+  title: string;
+  transcript: string;
+  thumbnailUrl?: string;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { url } = req.body; // Get the URL from the request body
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-    try {
-      // Validate URL
-      if (!url || !ytdl.validateURL(url)) {
-        return res.status(400).json({ error: 'Invalid YouTube URL' });
-      }
+  const { url } = req.body;
 
-      // Fetch the video information using ytdl-core
-      const info = await ytdl.getBasicInfo(url);
-      
-      // Check if captions exist
-      const captions = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (!captions || captions.length === 0) {
-        return res.status(404).json({ error: 'No transcript available for this video.' });
-      }
+  if (!url) {
+    return res.status(400).json({ error: 'YouTube URL is required' });
+  }
 
-      // Fetch the actual transcript text from the first track
-      const transcriptUrl = captions[0].baseUrl; // Assuming we want the first caption track
-      const transcriptResponse = await fetch(transcriptUrl);
-      const transcriptData = await transcriptResponse.text();
+  try {
+    // Fetch video info from YouTube
+    const videoInfo = await ytdl.getInfo(url);
+    const captions = videoInfo.player_response.captions;
 
-      // Call the analyzeTranscript function and get the analysis
-      const analyzedData: CharacterAnalysis = analyzeTranscript(transcriptData);
-
-      // Respond with the analysis data
-      return res.status(200).json({
-        videoTitle: info.videoDetails.title, // Use the actual video title
-        transcript: analyzedData, // Include the analyzed data in the response
-        thumbnailUrl: info.videoDetails.thumbnails[0].url, // Use the actual thumbnail URL
-      });
-    } catch (error) {
-      console.error("Error fetching or analyzing transcript:", error);
-      return res.status(500).json({ error: "Failed to process the transcript" });
+    if (!captions || !captions.playerCaptionsTracklistRenderer) {
+      throw new Error('No captions found for this video.');
     }
-  } else {
-    // Handle any other HTTP method
-    return res.setHeader('Allow', ['POST']).status(405).end(`Method ${req.method} Not Allowed`);
+
+    const transcriptUrl = captions.playerCaptionsTracklistRenderer.captionTracks[0]?.baseUrl;
+
+    if (!transcriptUrl) {
+      throw new Error('Transcript URL not found.');
+    }
+
+    const transcriptResponse = await fetch(transcriptUrl);
+    const transcriptData = await transcriptResponse.text(); // Assuming transcript is in text format
+
+    console.log("Transcript Data:", transcriptData); // Log transcript data for debugging
+
+    // Analyze the transcript
+    const characterAnalysis: CharacterAnalysis = analyzeTranscript(transcriptData);
+
+    return res.status(200).json({ 
+      title: videoInfo.videoDetails.title,
+      transcript: transcriptData,
+      thumbnailUrl: videoInfo.videoDetails.thumbnails[0]?.url,
+      analysis: characterAnalysis
+    });
+
+  } catch (error) {
+    console.error("Error fetching or analyzing transcript:", error);
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Failed to process the transcript" });
   }
 }
