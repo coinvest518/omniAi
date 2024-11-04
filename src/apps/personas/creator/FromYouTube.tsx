@@ -16,7 +16,7 @@ import type { SimplePersonaProvenance } from '../store-app-personas';
 function extractVideoID(url: string): string | null {
   const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^#&?]*).*/;
   const match = url.match(regExp);
-  return (match && match[1]?.length == 11) ? match[1] : null;
+  return (match && match[1]?.length === 11) ? match[1] : null;
 }
 
 
