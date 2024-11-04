@@ -47,7 +47,9 @@ export async function POST(req: Request) {
 
     // Fetch transcript
     const transcriptResponse = await fetch(transcriptTrack.baseUrl);
+    console.log('Transcript response headers:', transcriptResponse.headers); // Log headers
     if (!transcriptResponse.ok) {
+      console.error('Error fetching transcript:', transcriptResponse.statusText);
       throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
     }
 
