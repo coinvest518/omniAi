@@ -5,8 +5,7 @@ import { analyzeTranscript } from './analyzeTranscript';
 
 export async function POST(req: Request) {
   try {
-    // Validate request body
-    const body = await req.json().catch(() => null);
+    const body = await req.json(); // Ensure this is correct
     if (!body?.url) {
       return NextResponse.json(
         { error: 'Missing or invalid URL in request body' },
@@ -14,7 +13,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate YouTube URL
     if (!ytdl.validateURL(body.url)) {
       return NextResponse.json(
         { error: 'Invalid YouTube URL' },
