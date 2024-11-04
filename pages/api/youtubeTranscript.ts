@@ -27,10 +27,16 @@ export default async function handler(req: Request) {
     const captionsText = await captionsResponse.text();
     const transcript = analyzeTranscript(captionsText);
     return new NextResponse(JSON.stringify({ videoTitle, thumbnailUrl, transcript }), { status: 200 });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    console.error('Error processing video:', errorMessage); // Log the error
-    return new NextResponse(`Failed to process video: ${errorMessage}`, { status: 500 });
+  } catch (e) {
+    if (e instanceof Response) {
+      // Handle the case where the error is a Response object
+      const errorMessage = await e.json();
+      console.error('Error from fetch:', errorMessage);
+      return new NextResponse(`Error from fetch: ${JSON.stringify(errorMessage)}`, { status: 500 });
+    } else {
+      // Handle other types of errors
+      console.error('Error:', e);
+      return new NextResponse(`Failed to process video: ${e.message}`, { status: 500 });
+    }
   }
 }
-
