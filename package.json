@@ -124,7 +124,7 @@
     "@babel/preset-react": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
     "@cloudflare/puppeteer": "0.0.5",
-    "@types/axios": "^0.14.0",
+    "@types/axios": "^0.14.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/fluent-ffmpeg": "^2.1.26",
