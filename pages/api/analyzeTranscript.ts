@@ -18,12 +18,14 @@ export function analyzeTranscript(transcript: string): CharacterAnalysis {
 
     // Example manual analysis (replace with your actual logic):
     const ageClues = transcript.match(/(\d+)\s*(years\s*old|year\s*old|yo)/i);
-    let age = ageClues && ageClues[1] ? parseInt(ageClues[1], 10) : null;
-    // Validate parseInt output
-    if (age != null) {
-      console.error("Invalid age found in transcript.");
-      age = null;
-    }
+    let age: number | null = null; // Initialize to null
+// ... (your code)
+if (ageClues && ageClues[1]) {
+    age = parseInt(ageClues[1], 10);
+}
+if (age != null) { // Check if age is not null before using it
+  console.log(`The age is ${age}`); // Safe to use age here
+}
 
     const professionClues = transcript.match(/(software\s*engineer|doctor|teacher|entrepreneur)/gi);
     const profession = professionClues ? professionClues[0] : null;
