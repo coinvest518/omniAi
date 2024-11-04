@@ -16,6 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const info = await ytdl.getInfo(url);
+    console.log('Video info:', info); // Log video information for debugging
+
     const videoTitle = info.videoDetails.title;
     const thumbnailUrl = info.videoDetails.thumbnails[0].url;
 
@@ -26,16 +28,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'No transcript available' });
     }
 
-    const captionsResponse = await fetch(transcriptUrl);
-    const captionsText = await captionsResponse.text();
+    console.log('Transcript URL:', transcriptUrl); // Log transcript URL
 
-    // Process the transcript using analyzeTranscript function
+    const captionsResponse = await fetch(transcriptUrl);
+    if (!captionsResponse.ok) {
+      throw new Error('Failed to fetch captions');
+    }
+
+    const captionsText = await captionsResponse.text();
     const transcript = analyzeTranscript(captionsText);
 
     return res.status(200).json({ videoTitle, thumbnailUrl, transcript });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    console.error('Error processing video:', errorMessage); // Log the error
     return res.status(500).json({ error: `Failed to process video: ${errorMessage}` });
   }
 }
