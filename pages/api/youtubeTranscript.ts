@@ -3,40 +3,94 @@ import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
 import { analyzeTranscript } from './analyzeTranscript';
 
-export default async function handler(req: Request) {
-  const { url } = await req.json();
-
+export async function POST(req: Request) {
   try {
-    if (req.method !== 'POST') {
-      return new NextResponse('Method not allowed', { status: 405 });
+    // Validate request body
+    const body = await req.json().catch(() => null);
+    if (!body?.url) {
+      return NextResponse.json(
+        { error: 'Missing or invalid URL in request body' },
+        { status: 400 }
+      );
     }
-    const info = await ytdl.getInfo(url);
-    console.log('Video info:', info); // Log video information for debugging
+
+    // Validate YouTube URL
+    if (!ytdl.validateURL(body.url)) {
+      return NextResponse.json(
+        { error: 'Invalid YouTube URL' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch video information
+    const info = await ytdl.getInfo(body.url).catch((error) => {
+      console.error('Failed to fetch video info:', error);
+      throw new Error('Failed to fetch video information');
+    });
+
+    // Extract video details
     const videoTitle = info.videoDetails.title;
-    const thumbnailUrl = info.videoDetails.thumbnails[0].url;
+    const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
     const captionTracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    const transcriptUrl = captionTracks?.find(track => track.languageCode === 'en')?.baseUrl;
-    if (!transcriptUrl) {
-      return new NextResponse('No transcript available', { status: 400 });
+
+    // Find English transcript
+    const transcriptTrack = captionTracks?.find(
+      (track: any) => track.languageCode === 'en'
+    );
+
+    if (!transcriptTrack?.baseUrl) {
+      return NextResponse.json(
+        { error: 'No English transcript available for this video' },
+        { status: 404 }
+      );
     }
-    console.log('Transcript URL:', transcriptUrl); // Log transcript URL
-    const captionsResponse = await fetch(transcriptUrl);
-    if (!captionsResponse.ok) {
-      throw new Error('Failed to fetch captions');
+
+    // Fetch transcript
+    const transcriptResponse = await fetch(transcriptTrack.baseUrl);
+    if (!transcriptResponse.ok) {
+      throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
     }
-    const captionsText = await captionsResponse.text();
-    const transcript = analyzeTranscript(captionsText);
-    return new NextResponse(JSON.stringify({ videoTitle, thumbnailUrl, transcript }), { status: 200 });
-  } catch (e) {
-    if (e instanceof Response) {
-      // Handle the case where the error is a Response object
-      const errorMessage = await e.json();
-      console.error('Error from fetch:', errorMessage);
-      return new NextResponse(`Error from fetch: ${JSON.stringify(errorMessage)}`, { status: 500 });
-    } else {
-      // Handle other types of errors
-      console.error('Error:', e);
-      return new NextResponse(`Failed to process video: ${e.message}`, { status: 500 });
+
+    const transcriptText = await transcriptResponse.text();
+    if (!transcriptText) {
+      throw new Error('Empty transcript received');
     }
+
+    // Process transcript
+    const transcript = analyzeTranscript(transcriptText);
+
+    // Return successful response
+    return NextResponse.json({
+      success: true,
+      data: {
+        videoTitle,
+        thumbnailUrl,
+        transcript
+      }
+    });
+
+  } catch (error) {
+    console.error('API Error:', error);
+
+    // Determine if error is a known type
+    const isYTDLError = error instanceof Error && error.message.includes('ytdl');
+    const isFetchError = error instanceof Error && error.message.includes('fetch');
+
+    if (isYTDLError) {
+      return NextResponse.json(
+        { error: 'Failed to process YouTube video' },
+        { status: 500 }
+      );
+    } else if (isFetchError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch transcript' },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
   }
 }

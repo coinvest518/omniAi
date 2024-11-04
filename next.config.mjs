@@ -20,6 +20,8 @@ let nextConfig = {
       'img.clerk.com',
       'lh3.googleusercontent.com',
       'example.com', // Add your new domain here
+      'img.youtube.com', 
+      'i.ytimg.com',
     ], 
   },
 
