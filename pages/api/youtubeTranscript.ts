@@ -1,4 +1,3 @@
-// pages/api/youtubeTranscript.js
 import { NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
@@ -98,5 +97,14 @@ export async function POST(req: Request) {
       { error: 'An unexpected error occurred' },
       { status: 500 }
     );
+  }
+}
+
+// Add this default export to the file
+export default function handler(req: Request, res: Response) {
+  if (req.method === 'POST') {
+    return POST(req);
+  } else {
+    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
   }
 }
