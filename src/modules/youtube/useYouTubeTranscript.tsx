@@ -1,14 +1,16 @@
 import * as React from 'react';
+import { useEffect, useState } from 'react';
+
 
 export interface YTVideoTranscript {
-  url: string;
+  videoID: string;
   title: string;
   transcript: string;
   thumbnailUrl: string;
 }
 
 export function useYouTubeTranscript(
-  url: string | null,
+  videoID: string | null,
   onNewTranscript: (transcript: YTVideoTranscript) => void
 ) {
   const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
@@ -17,7 +19,7 @@ export function useYouTubeTranscript(
   const [error, setError] = React.useState<unknown | null>(null);
 
   React.useEffect(() => {
-    if (!url) return;
+    if (!videoID) return;
 
     const fetchData = async () => {
       setIsFetching(true);
@@ -25,17 +27,17 @@ export function useYouTubeTranscript(
       setError(null);
 
       try {
-        const response = await fetch('/api/youtubeTranscript', { // No query parameter
+        const response = await fetch('/api/youtubeTranscript', { // Update path here
           method: 'POST', // Use POST request
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ url }), // Send videoUrl in the body
+          body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoID}` }),
         });
         const data = await response.json();
 
         const newTranscript = {
-          url: data.url,
+          videoID: data.videoID,
           title: data.videoTitle,
           transcript: data.transcript,
           thumbnailUrl: data.thumbnailUrl,
@@ -51,7 +53,7 @@ export function useYouTubeTranscript(
     };
 
     fetchData();
-  }, [url, onNewTranscript]);
+  }, [videoID, onNewTranscript]);
 
   return { transcript, isFetching, isError, error };
 }
