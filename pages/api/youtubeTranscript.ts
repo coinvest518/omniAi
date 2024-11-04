@@ -3,6 +3,9 @@ import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
 import { analyzeTranscript } from './analyzeTranscript';
 
+// Specify Node.js runtime
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     // Parse JSON safely
@@ -65,13 +68,5 @@ export async function POST(req: NextRequest) {
       { error: 'An unexpected error occurred' },
       { status: 500 }
     );
-  }
-}
-
-export default async function handler(req: NextRequest) {
-  if (req.method === 'POST') {
-    return POST(req);
-  } else {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
   }
 }
