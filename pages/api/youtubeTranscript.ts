@@ -1,16 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import ytdl from 'ytdl-core';
 import fetch from 'node-fetch';
-import { analyzeTranscript } from './analyzeTranscript';
 
-// Define response type
+// Define the structure of the expected response from the Render API
+type RenderApiResponse = {
+  videoTitle: string;
+  thumbnailUrl: string;
+  transcript: string; // Assuming transcript is a string
+};
+
+// Define response type for your API
 type ResponseData = {
   success?: boolean;
   error?: string;
   data?: {
     videoTitle: string;
     thumbnailUrl: string;
-    transcript: any;
+    transcript: any; // You can define this type further if needed
   };
 };
 
@@ -25,97 +30,49 @@ export default async function handler(
 
   try {
     const body = req.body;
-    
+
+    // Validate the incoming request body
     if (!body || !body.url) {
       return res.status(400).json({ error: 'Missing or invalid URL in request body' });
     }
 
-    // Add additional validation for YouTube URL
-    if (!ytdl.validateURL(body.url)) {
-      return res.status(400).json({ error: 'Invalid YouTube URL' });
-    }
+    // Replace with your Render API endpoint
+    const renderApiUrl = 'https://youtubeserver-pzcp.onrender.com/api/transcribe';
 
-    // Add retries for video info fetch
-    let info;
-    let retryCount = 0;
-    const maxRetries = 3;
+    // Forward request to the Render API to get the transcript
+    const renderResponse = await fetch(renderApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url: body.url }),
+    });
 
-    while (retryCount < maxRetries) {
-      try {
-        info = await ytdl.getInfo(body.url, {
-          requestOptions: {
-            headers: {
-              // Add required headers
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.5',
-            }
-          }
-        });
-        break;
-      } catch (error) {
-        retryCount++;
-        if (retryCount === maxRetries) {
-          throw new Error(`Failed to fetch video info after ${maxRetries} attempts`);
-        }
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-      }
-    }
-
-    if (!info) {
-      throw new Error('Failed to fetch video information');
-    }
-
-    // Extract video details
-    const videoTitle = info.videoDetails.title;
-    const thumbnailUrl = info.videoDetails.thumbnails[0]?.url;
-
-    // Locate English transcript with fallback options
-    const tracks = info.player_response?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    let transcriptUrl = tracks?.find(track => track.languageCode === 'en')?.baseUrl;
-    
-    // If no English transcript, try auto-generated
-    if (!transcriptUrl) {
-      transcriptUrl = tracks?.find(track => track.languageCode === 'en-US' || track.kind === 'asr')?.baseUrl;
-    }
-
-    if (transcriptUrl) {
-      const transcriptResponse = await fetch(transcriptUrl, {
-        headers: {
-          'Accept-Language': 'en-US,en;q=0.5',
-        }
+    // Check if the Render API responded with an error
+    if (!renderResponse.ok) {
+      const errorData = await renderResponse.json().catch(() => ({})); // Handle non-JSON responses gracefully
+      return res.status(renderResponse.status).json({
+        error: (errorData as { error?: string }).error || 'Failed to fetch transcript from Render API',
       });
-
-      if (!transcriptResponse.ok) {
-        throw new Error(`Failed to fetch transcript: ${transcriptResponse.statusText}`);
-      }
-
-      const transcriptText = await transcriptResponse.text();
-      const transcript = analyzeTranscript(transcriptText);
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          videoTitle,
-          thumbnailUrl,
-          transcript
-        }
-      });
-    } else {
-      return res.status(404).json({ error: 'No English transcript available for this video' });
     }
+
+    // Parse the successful response from the Render API
+    const data = (await renderResponse.json()) as RenderApiResponse;
+
+    if (!data || !data.transcript) {
+      return res.status(404).json({ error: 'No transcript available' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        videoTitle: data.videoTitle,
+        thumbnailUrl: data.thumbnailUrl,
+        transcript: data.transcript, // This should be the analyzed transcript
+      },
+    });
   } catch (error) {
     console.error('API Error:', error);
-    
-    // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes('Status code: 410')) {
-        return res.status(410).json({ error: 'This video is no longer available' });
-      }
-      return res.status(500).json({ error: error.message });
-    }
-    
     return res.status(500).json({ error: 'An unexpected error occurred' });
   }
 }
