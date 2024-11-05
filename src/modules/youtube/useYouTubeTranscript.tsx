@@ -1,81 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+// Copyright (c) 2023-2024 Enrico Ros
+// This subsystem is responsible for fetching the transcript of a YouTube video.
+// It is used by the Big-AGI Persona Creator to create a character sheet.
+
+import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
+
+import { frontendSideFetch } from '~/common/util/clientFetchers';
+
+import { fetchYouTubeTranscript } from './youtube.fetcher';
+import { apiAsync } from '~/common/util/trpc.client';
+
+// configuration
+const USE_FRONTEND_FETCH = false;
+
 
 export interface YTVideoTranscript {
   title: string;
   transcript: string;
-  thumbnailUrl?: string;
+  thumbnailUrl: string;
 }
 
-export function useYouTubeTranscript(
-  videoId: string | null,
-  onSuccess?: (transcript: YTVideoTranscript) => void,
-) {
-  const [transcript, setTranscript] = useState<YTVideoTranscript | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export function useYouTubeTranscript(videoID: string | null, onNewTranscript: (transcript: YTVideoTranscript) => void) {
 
-  const fetchTranscript = useCallback(async (videoId: string) => {
-    if (!videoId) return;
-    
-    setIsFetching(true);
-    setIsError(false);
-    setError(null);
+  // state
+  const [transcript, setTranscript] = React.useState<YTVideoTranscript | null>(null);
 
-    try {
-      const response = await fetch('/api/youtubeTranscript', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: `https://www.youtube.com/watch?v=${videoId}`,
-        }),
-      });
+  // data
+  const { data, isFetching, isError, error } = useQuery({
+    enabled: !!videoID,
+    queryKey: ['transcript', videoID],
+    queryFn: async () => USE_FRONTEND_FETCH
+      ? fetchYouTubeTranscript(videoID!, url => frontendSideFetch(url).then(res => res.text()))
+      : apiAsync.youtube.getTranscript.query({ videoId: videoID! }),
+    staleTime: Infinity,
+  });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch transcript');
-      }
-
-      const data = await response.json();
-      
-      // Validate response data
-      if (!data?.data?.transcript) {
-        throw new Error('Invalid transcript data received');
-      }
-
-      const transcriptData: YTVideoTranscript = {
-        title: data.data.videoTitle,
-        transcript: data.data.transcript,
-        thumbnailUrl: data.data.thumbnailUrl,
-      };
-
-      setTranscript(transcriptData);
-      onSuccess?.(transcriptData);
-
-    } catch (err) {
-      setIsError(true);
-      setError(err instanceof Error ? err : new Error('Unknown error'));
-    } finally {
-      setIsFetching(false);
+  // update the transcript when the underlying data changes
+  React.useEffect(() => {
+    if (!data) {
+      // setTranscript(null);
+      return;
     }
-  }, [onSuccess]);
+    const transcript = {
+      title: data.videoTitle,
+      transcript: data.transcript,
+      thumbnailUrl: data.thumbnailUrl,
+    };
+    setTranscript(transcript);
+    onNewTranscript(transcript);
+  }, [data, onNewTranscript]);
 
-  useEffect(() => {
-    if (videoId) {
-      fetchTranscript(videoId);
-    } else {
-      setTranscript(null);
-      setIsError(false);
-      setError(null);
-    }
-  }, [videoId, fetchTranscript]);
 
   return {
     transcript,
     isFetching,
-    isError,
-    error,
+    isError, error,
   };
 }
